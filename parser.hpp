@@ -2,92 +2,104 @@
 #include <sstream>
 #include <stdexcept>
 #include <cctype>
-class Parser
-{
-    public:
-    Parser()
-    {
+
+class Parser {
+public:
+    // take input and convert to stringstream
+    Parser() {
         std::string str;
-        std::cout<<"Enter infix string: ";
-        std::cin >> str;//user input gathered when class constructed
+        std::cout << "Enter infix string: ";
+        std::cin >> str; //user input gathered when class constructed
         stream = std::stringstream(str);
         lookAhead = stream.get();
     }
-    void parse()
-    {
+
+    // parse input and output result
+    void parse() {
         Expr();
         PrintTranslatedString();
     }
-    private:
-    char lookAhead;//char that is being handled
-    std::string translated;//char thats being output
-    std::stringstream stream;//stream of user's input
-    void Display(char terminal)
-    {
+
+private:
+    char lookAhead; //char that is being handled
+    std::string translated; //string that is being outputted
+    std::stringstream stream; //stream of user's input
+
+    // add character that's being handled to terminal
+    void Display(char terminal) {
         translated += terminal;
     }
-    void PrintTranslatedString()
-    {
-        std::cout<<translated<<std::endl;
+
+    // output final string after translation
+    void PrintTranslatedString() {
+        std::cout << translated << std::endl;
     }
-    std::string ErrorMessage(char lookAhead)
-    {
-        return "Syntax Error near: " + std::string(1,lookAhead);//identifies location of invalid char
+
+    // show error message
+    std::string ErrorMessage(char lookAhead) {
+        return "Syntax Error near: " + std::string(1,lookAhead); //identifies location of invalid char
     }
-     void Match(char terminal) {
+
+    // check next value is expected and move along input
+    void Match(char terminal) {
         if (terminal == lookAhead) {
             lookAhead = stream.get();
         }
+
+        // if value unexpected, throw error
         else {
             throw std::invalid_argument(ErrorMessage(lookAhead));
         }
     }
+
     /* digit Rules
     digit -> 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
     */
-    void Digit()
-    {
+    // add digit to translated string and move to next value
+    void Digit() {
         Display(lookAhead);
         Match(lookAhead);
     }
+
     /* factor Rules
     factor -> (expr)
              |digit
     */
-    void Factor()
-    {
-        if(isdigit(lookAhead))
+    // handle characters inputted
+    void Factor() {
+        // if char is a digit, use Digit() to store and move to next char
+        if (isdigit(lookAhead)) {
             Digit();
-        else if(lookAhead == '(')
-        {
+        }
+
+        // if char is a bracket, recurse through its contents and evaluate
+        // check for closing bracket and then move onto next char
+        else if (lookAhead == '(') {
             Match('(');
             Expr();
             Match(')');
         }
-        else
-        {
+
+        // otherwise, throw a syntax error
+        else {
             throw std::invalid_argument(ErrorMessage(lookAhead));
         }
     }
+
     /* term Rules
     term -> term * factor
            |term / factor
            |factor
     */
-    void Term()
-    {
+    // handle factor
+    void Term() {
         Factor();
-        if(lookAhead == '*')
-        {
-            Match('*');
+
+        // if next char is * or /, move to next character, validate and add to output
+        if (lookAhead == '*' || lookAhead == '/') {
+            Match(lookAhead);
             Factor();
-            Display('*');
-        }
-        else if(lookAhead == '/')
-        {
-            Match('/');
-            Factor();
-            Display('/');
+            Display(lookAhead);
         }
     }
     /* expr Rules
@@ -95,25 +107,24 @@ class Parser
            |expr - term
            |term
     */
-    void Expr()
-    {
+    // handle terms first
+    void Expr() {
         Term();
-        while(true)
-        {
-            if(lookAhead == '+')
-            {
-                Match('+');
+
+        // cache lookAhead's current value for reference
+        while (true) {
+            char cachedLookAhead = lookAhead;
+
+            // if next char is + or -, move to next character, validate and add to output
+            if (cachedLookAhead == '+' || cachedLookAhead == '-') {
+                Match(cachedLookAhead);
                 Term();
-                Display('+');
+                Display(cachedLookAhead);
+                continue;
             }
-            else if(lookAhead == '-')
-            {
-                Match('-');
-                Term();
-                Display('-');
-            }
-            else return;
+            
+            // if next char isn't + or -, expression is complete
+            return;
         }
     }
-
 };

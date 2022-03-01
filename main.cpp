@@ -3,14 +3,16 @@
 int main()
 {
     Parser parser;
-    try
-    {
+
+    // attempt to parse
+    try {
         parser.parse();
     }
-    catch(const std::invalid_argument ia)
-    {
-        std::cout << ia.what() << '\n';
+
+    // in event of invalid arg, output relevant error
+    catch (const std::invalid_argument ia) {
+        std::cout << ia.what() << std::endl;
     }
+
     return 0;
-    
 }
